@@ -1,7 +1,7 @@
 # ZipPdfPassCracker
-This is a simple python3 script fo perform password attack to creack the password of pdf and zip files
+This is a simple python3 script for perform password attack on pdf and zip files to crack the password.
 
-How to install requirement
+How to install requirements
 
     pip3 install -r requirement.txt
 
