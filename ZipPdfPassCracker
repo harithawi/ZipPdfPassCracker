@@ -1,0 +1,82 @@
+#!/usr/bin/python3
+"""
+	Created by Haritha
+
+"""
+import os
+import PyPDF2
+import zipfile36 as zipfile
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-n","--name",dest="name",help="Name of the pdf or zip file.")
+parser.add_option("-p","--password",dest="password",help="One single password or a wordlist")
+(options,args) = parser.parse_args()
+	
+
+def getPassword(fname):
+	with open(fname, "r") as f:
+		for i in f:
+			yield i.strip()
+
+
+def crackPdf(pdfName, password):
+	with open(pdfName,"rb") as f:
+		pdfFile = PyPDF2.PdfReader(f)
+		try:
+			if pdfFile.is_encrypted:
+				pdfFile.decrypt(password)
+				if len(pdfFile.pages) > 0:
+					print(f"[+] Password found: {password}")	
+			else:
+				print("[-] PDF file is not encrypted...")
+
+		except PyPDF2.errors.FileNotDecryptedError:
+			pass
+
+
+
+def crackZip(zipName, password):
+	try:
+		with zipfile.ZipFile(zipName, "r") as zip_file:
+			try:
+        			zip_file.extractall(pwd=password.encode())
+        			print(f"[+] Password found: {password}\n[+] ZIP file extracted successfully...")
+			except RuntimeError:
+				pass
+	except zipfile.BadZipFile:
+		print("The provided file is not a valid ZIP file...")
+
+if options.name != None and options.password != None:
+	filename = options.name
+	password = options.password
+	
+	print(f"[+] Attempting to crack the password of {filename}")
+	if password.endswith(".txt"):
+		if os.path.isfile(password):
+			print(f"[+] Reading the passwords from {password}")
+		else:
+			print(f"[-] File not found: {password}")
+			exit()
+	else:
+		print(f"[+] Using the password as:  {password}")
+
+	if os.path.isfile(filename):
+		if filename.endswith(".pdf"):
+			if password.endswith(".txt"):
+				for i in getPassword(password):
+					crackPdf(filename,i)
+			else:
+				crackPdf(filename,password)
+
+		elif filename.endswith(".zip"):	
+			if password.endswith(".txt"):
+				for i in getPassword(password):
+					crackZip(filename,i)
+			else:
+				crackZip(filename,password)
+
+		else:
+			parser.print_help()
+	else:
+		print(f"[-] File not found: {filename}") 
